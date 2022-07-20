@@ -1,0 +1,79 @@
+name: Domain Renewal
+
+on:
+
+  push:
+
+  schedule:
+
+    - cron: '*/5 * * * *'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+
+        uses: actions/setup-python@v2
+
+        with:
+
+          python-version: '3.8'
+
+          architecture: 'x64'
+
+      - name: Get Python version
+
+        run: python -V
+
+      - name: pip setting
+
+        run: |
+
+          python -m pip install --upgrade pip
+
+          pip install datetime
+
+          pip install requests
+
+      - name: IPアドレス通知
+
+        id: check
+
+        run: |
+
+          echo "送信開始"
+
+          wget -O - http://${{ secrets.USER_NAME }}:${{ secrets.PASSWORD }}@www.mydns.jp/login.html
+
+          echo "送信終了"
+
+      - name: run python
+
+        if: steps.check.outcome == 'success'
+
+        run: |
+
+          python updateReadme.py
+
+      - name: Commit and Push 
+
+        if: steps.check.outcome == 'success'
+
+        run: |
+
+          git config user.name "2288256-sub"
+
+          git config user.email ${{ secrets.MAIL }}
+
+          git add README.md
+
+          git commit -m 'update README.md'
+
+          git push origin main
